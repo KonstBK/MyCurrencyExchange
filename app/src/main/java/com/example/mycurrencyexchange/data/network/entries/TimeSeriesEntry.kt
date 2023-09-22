@@ -1,4 +1,4 @@
-package com.example.mycurrencyexchange.network.entries
+package com.example.mycurrencyexchange.data.network.entries
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

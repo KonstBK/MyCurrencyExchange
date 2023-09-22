@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">My Currency Exchange</string>
+    <string name="type_currency">Type currency</string>
+    <string name="search">Search</string>
 </resources>

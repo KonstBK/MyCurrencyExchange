@@ -7,15 +7,26 @@
 
     <fragment
         android:id="@+id/currencyPairsFragment"
-        android:name="com.example.mycurrencyexchange.CurrencyPairsFragment"
+        android:name="com.example.mycurrencyexchange.ui.currency_pairs_screen.CurrencyPairsFragment"
         android:label="fragment_currency_pairs"
-        tools:layout="@layout/fragment_currency_pairs" />
+        tools:layout="@layout/fragment_currency_pairs">
+    <argument
+        android:name="selectedCurrency"
+        app:argType="string"
+        app:nullable="true"
+        android:defaultValue="null"/>
+    </fragment>
+
     <fragment
         android:id="@+id/currenciesFragment"
-        android:name="com.example.mycurrencyexchange.CurrenciesFragment"
-        android:label="CurrenciesFragment" >
+        android:name="com.example.mycurrencyexchange.ui.currencies_screen.CurrenciesFragment"
+        android:label="CurrenciesFragment">
         <action
             android:id="@+id/action_currenciesFragment_to_currencyPairs"
-            app:destination="@id/currencyPairsFragment" />
+            app:destination="@id/currencyPairsFragment">
+            <argument
+                android:name="selectedCurrency"
+                app:argType="string" />
+        </action>
     </fragment>
 </navigation>

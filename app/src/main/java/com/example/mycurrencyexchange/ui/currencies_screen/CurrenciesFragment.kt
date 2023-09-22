@@ -1,10 +1,11 @@
-package com.example.mycurrencyexchange
+package com.example.mycurrencyexchange.ui.currencies_screen
 
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -13,6 +14,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mycurrencyexchange.R
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -20,9 +22,11 @@ class CurrenciesFragment: Fragment() {
 
     val viewModel by viewModels<CurrenciesViewModel>()
 
-    fun showCurrenciesPairs(){
-        findNavController().navigate(R.id.currencyPairsFragment)
+    fun showCurrenciesPairs(s: String) {
+            findNavController().navigate(CurrenciesFragmentDirections.actionCurrenciesFragmentToCurrencyPairs(s))
     }
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,8 +41,12 @@ class CurrenciesFragment: Fragment() {
             override fun onChanged(value: List<HolderItem>) {
                 initRecycler(value)
             }
-
         })
+        view.findViewById<Button>(R.id.search_button).setOnClickListener {
+            val text = view.findViewById<TextView>(R.id.search_edit_text).text.toString()
+            viewModel.searchByCurrencyName(text)
+        }
+
     }
 
     private fun initRecycler(list: List<HolderItem>) {
@@ -47,12 +55,15 @@ class CurrenciesFragment: Fragment() {
             LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         recycler?.adapter = CurrenciesAdapter(
             context = requireContext().applicationContext,
-            list = list
+            list = list,
+            {showCurrenciesPairs(it)}
         )
     }
+
+
 }
 
-class CurrenciesAdapter(private val context: Context, private val list: List<HolderItem>): RecyclerView.Adapter<CurrenciesAdapter.CurrenciesHolder>() {
+class CurrenciesAdapter(private val context: Context, private val list: List<HolderItem>, private val navigate: (String) -> Unit): RecyclerView.Adapter<CurrenciesAdapter.CurrenciesHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CurrenciesHolder {
        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.currency_item, parent, false)
         return CurrenciesHolder(itemView)
@@ -68,6 +79,9 @@ class CurrenciesAdapter(private val context: Context, private val list: List<Hol
             else -> {throw IllegalArgumentException()}
         }
         holder.currencyDynamicImageView.setImageDrawable(context.getDrawable(drawable))
+        holder.itemView.setOnClickListener {
+            navigate(list[position].name)
+        }
     }
 
     override fun getItemCount(): Int = list.count()

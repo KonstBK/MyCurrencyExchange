@@ -1,10 +1,11 @@
-package com.example.mycurrencyexchange
+package com.example.mycurrencyexchange.ui.currency_pairs_screen
 
 import android.icu.util.Calendar
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mycurrencyexchange.repository.CurrencyRepository
+import com.example.mycurrencyexchange.data.entries.CurrenciesDynamic
+import com.example.mycurrencyexchange.data.repository.CurrencyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -12,23 +13,19 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
-
 @HiltViewModel
-class CurrenciesViewModel @Inject constructor(private val repository: CurrencyRepository): ViewModel() {
+class CurrencyPairsViewModel @Inject constructor(private val repository: CurrencyRepository): ViewModel() {
+    val pairs = MutableLiveData<List<CurrencyPairsItem>>()
 
-    val currencies = MutableLiveData<List<HolderItem>>()
-
-    init {
-        viewModelScope.launch{
-            getHolderItems()
+    fun searchByCurrencyName(name: String){
+        viewModelScope.launch {
+            getCurrencyPairsItem(name.toUpperCase(Locale.ROOT))
         }
     }
-
-    private suspend fun getHolderItems() {
-
+    suspend fun getCurrencyPairsItem(selected:String): List<CurrencyPairsItem>? {
         val yesterday = getYesterdayDate()
         val today = getTodayDate()
-        val timeSeriesEntry = repository.getTimeseries(yesterday, today, "UAH")
+        val timeSeriesEntry = repository.getTimeseries(yesterday, today, selected)
         val pastValue: Map<String, Double> = timeSeriesEntry.rates[yesterday]!!
         val lastValue: Map<String, Double> = timeSeriesEntry.rates[today]!!
         val change = lastValue.map { (key, value) ->
@@ -40,11 +37,10 @@ class CurrenciesViewModel @Inject constructor(private val repository: CurrencyRe
 
                 else -> {throw IllegalArgumentException()}
             }
-            HolderItem(key, newVal, dynamic)
+            CurrencyPairsItem("$selected/$key", newVal, dynamic)
         }
-
-        currencies.value = change
-
+        pairs.value = change
+        return change
     }
 
     fun getTodayDate(): String{
@@ -60,15 +56,9 @@ class CurrenciesViewModel @Inject constructor(private val repository: CurrencyRe
     }
 }
 
-enum class CurrenciesDynamic{
-    UP,
-    DOWN,
-    EQUAL
-
-}
-
-data class HolderItem(
-    val name: String,
-    val change: Double,
-    val dynamic: CurrenciesDynamic
+data class CurrencyPairsItem(
+    val pairName: String,
+    val pairChange: Double,
+    val pairDynamic: CurrenciesDynamic
 )
+
