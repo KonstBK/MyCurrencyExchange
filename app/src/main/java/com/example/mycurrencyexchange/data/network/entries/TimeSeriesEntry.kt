@@ -13,11 +13,4 @@ data class TimeSeriesEntry(
     val endDate: String,
     val timeseries: Boolean,
     val rates: Map<String, Map<String, Double>>
-//    val base: String,
-//    val endDate: String,
-//    val rates: Map<String, Map<String, Double>>,
-//    //val rate1: Map<String, Double>,
-//    //val rate2: Map<String, Double>,
-//    val startDate: String,
-//    val success: Boolean
 )

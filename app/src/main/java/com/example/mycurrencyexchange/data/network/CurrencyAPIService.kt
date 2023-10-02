@@ -29,7 +29,6 @@ class CurrencyAPIService @Inject constructor() {
         // Настраиваем запросы
         val request: Request = original.newBuilder()
             .header("X-RapidAPI-Key", "d985cd9ab7mshf6d3824d1b68073p159545jsn0dc8d09d660d")
-            .header("X-RapidAPI-Host", "currency-conversion-and-exchange-rates.p.rapidapi.com")
             .method(original.method, original.body)
             .build()
         chain.proceed(request)
@@ -48,21 +47,10 @@ class CurrencyAPIService @Inject constructor() {
 
     private val api by lazy { retrofit.create(CurrencyApi::class.java) }
 
-    suspend fun getCurrency(): CurrencySymbols {
-        return api.getSymbols()
-    }
-
     suspend fun getTimeseries(startDate: String, endDate: String, from: String): TimeSeriesEntry {
         return api.timeSeriesEndpoint(startDate, endDate, from)
     }
 
-    suspend fun getRecentRate(from: String, to: List<String>): Map<String, Double> {
-        return api.getRecentRate(from, to)
-    }
-
-    suspend fun getPastRate(date: String): Map<String, Double> {
-        return api.getPastRate(date)
-    }
 
 }
 

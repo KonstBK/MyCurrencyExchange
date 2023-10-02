@@ -52,6 +52,20 @@ android {
 }
 
 dependencies {
+    val roomVersion = "2.3.0"
+    val lifecycleVersion = "2.4.0"
+    val appCompatVersion = "1.4.0"
+    val activityVersion = "1.4.0"
+
+
+    implementation ("androidx.appcompat:appcompat:$appCompatVersion")
+    implementation ("androidx.activity:activity-ktx:$activityVersion")
+
+    // Room components
+    implementation ("androidx.room:room-ktx:$roomVersion")
+    kapt ("androidx.room:room-compiler:$roomVersion")
+    androidTestImplementation ("androidx.room:room-testing:$roomVersion")
+
 
     implementation ("androidx.appcompat:appcompat:1.6.1")
 

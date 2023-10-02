@@ -1,6 +1,7 @@
 package com.example.mycurrencyexchange.ui.currencies_screen
 
 import android.icu.util.Calendar
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -36,6 +37,7 @@ class CurrenciesViewModel @Inject constructor(private val repository: CurrencyRe
         val yesterday = getYesterdayDate()
         val today = getTodayDate()
         val timeSeriesEntry = repository.getTimeseries(yesterday, today, "UAH")
+        Log.i("TAG", "getHolderItems: $timeSeriesEntry")
         val pastValue: Map<String, Double> = timeSeriesEntry.rates[yesterday]!!
         val lastValue: Map<String, Double> = timeSeriesEntry.rates[today]!!
         val change = lastValue.map { (key, value) ->
