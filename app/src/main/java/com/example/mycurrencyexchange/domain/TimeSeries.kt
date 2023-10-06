@@ -1,4 +1,4 @@
-package com.example.mycurrencyexchange.data.repository
+package com.example.mycurrencyexchange.domain
 
 
 data class TimeSeries(

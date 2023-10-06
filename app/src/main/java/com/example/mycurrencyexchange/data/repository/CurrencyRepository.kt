@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.mycurrencyexchange.domain.ICurrencyRepository
 import com.example.mycurrencyexchange.data.network.CurrencyAPIService
 import com.example.mycurrencyexchange.data.network.entries.TimeSeriesEntry
+import com.example.mycurrencyexchange.domain.TimeSeries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -11,7 +12,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-class CurrencyRepository @Inject constructor(private val service: CurrencyAPIService, private val dao: CurrencyDao) :
+class CurrencyRepository @Inject constructor(
+    private val service: CurrencyAPIService,
+    private val dao: CurrencyDao
+) :
     ICurrencyRepository {
 
 
@@ -22,25 +26,26 @@ class CurrencyRepository @Inject constructor(private val service: CurrencyAPISer
     ): TimeSeries {
         return try {
             val entries = service.getTimeseries(startDate, endDate, from)
-            entries.rates[startDate]?.entries?.map {
-                Log.i("TAG", "map $it")
-                CurrencyRateEntity(1, startDate, from, it.key, it.value)
-            }?.let {
-                CoroutineScope(Dispatchers.IO).launch {
-                    dao.insertCurrencyRate(it)
-                    Log.i("TAG", "let $it")
+            entries.rates.forEach {
+                val date = it.key
+                it.value.map {
+                    CurrencyRateEntity(
+                        date = date,
+                        base = from,
+                        name = it.key,
+                        value = it.value)
+                }.let {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        dao.insertCurrencyRate(it)
+                        Log.i("TAG", "let2 $it")
+                    }.join()
                 }
             }
-            entries.rates[endDate]?.entries?.map {
-                CurrencyRateEntity(2, endDate, from, it.key, it.value)
-            }?.let {
-                CoroutineScope(Dispatchers.IO).launch {
-                dao.insertCurrencyRate(it)
-            }}
-            return entries.toTimeSeries()
+            Log.i("TAG", "getTimeseries: $entries")
+            return getLocalTimeseries(from, startDate, endDate)
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.i("Exception","${e.message} ")
+            Log.i("TAG", "${e.message} ")
             getLocalTimeseries(from, startDate, endDate)
         }
     }
@@ -50,10 +55,12 @@ class CurrencyRepository @Inject constructor(private val service: CurrencyAPISer
         yesterdayDate: String,
         todayDate: String,
 
-    ): TimeSeries {
+        ): TimeSeries {
         val res = mutableMapOf<String, Map<String, Double>>()
-        val yesterday = dao.getCurrencyRate(yesterdayDate, base).first().associate { it.name to it.value }
-        val today = dao.getCurrencyRate(todayDate, base).first().associate { it.name to it.value }
+        val yesterday =
+            dao.getCurrencyRate(yesterdayDate, base).first().associate { it.name to it.value }
+        val today =
+            dao.getCurrencyRate(todayDate, base).first().associate { it.name to it.value }
         res[todayDate] = today
         res[yesterdayDate] = yesterday
         val timeseries = TimeSeries(base, res)

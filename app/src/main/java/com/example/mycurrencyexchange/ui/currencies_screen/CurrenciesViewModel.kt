@@ -36,10 +36,14 @@ class CurrenciesViewModel @Inject constructor(private val repository: CurrencyRe
 
         val yesterday = getYesterdayDate()
         val today = getTodayDate()
-        val timeSeriesEntry = repository.getTimeseries(yesterday, today, "UAH")
-        Log.i("TAG", "getHolderItems: $timeSeriesEntry")
-        val pastValue: Map<String, Double> = timeSeriesEntry.rates[yesterday]!!
-        val lastValue: Map<String, Double> = timeSeriesEntry.rates[today]!!
+        val timeSeries = repository.getTimeseries(yesterday, today, "UAH")
+        Log.i("TAG", "getHolderItems: $timeSeries")
+        val pastValue: Map<String, Double> = timeSeries.rates[yesterday]!!
+        val lastValue: Map<String, Double> = timeSeries.rates[today]!!
+
+        Log.i("TAG", "pastValue: $pastValue")
+        Log.i("TAG", "lastValue: $lastValue")
+
         val change = lastValue.map { (key, value) ->
             val newVal = ((pastValue.getValue(key) - lastValue.getValue(key)) / lastValue.getValue(key)) * 100
             val dynamic = when{
@@ -51,6 +55,7 @@ class CurrenciesViewModel @Inject constructor(private val repository: CurrencyRe
             }
             HolderItem(key, newVal, dynamic)
         }
+        Log.i("TAG", "change: $change")
         return change
     }
 
