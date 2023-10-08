@@ -1,22 +1,19 @@
 package com.example.mycurrencyexchange.ui.currencies_screen
 
-import android.icu.util.Calendar
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mycurrencyexchange.data.entries.CurrenciesDynamic
-import com.example.mycurrencyexchange.data.repository.CurrencyRepository
+import com.example.mycurrencyexchange.domain.CurrencyItem
+import com.example.mycurrencyexchange.domain.use_case.GetCurrenciesItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
 
 @HiltViewModel
-class CurrenciesViewModel @Inject constructor(private val repository: CurrencyRepository): ViewModel() {
+class CurrenciesViewModel @Inject constructor(private val getCurrenciesItem: GetCurrenciesItem): ViewModel() {
 
     val currencies = MutableLiveData<List<HolderItem>>()
 
@@ -33,44 +30,17 @@ class CurrenciesViewModel @Inject constructor(private val repository: CurrencyRe
     }
 
     private suspend fun getHolderItems(): List<HolderItem> {
-
-        val yesterday = getYesterdayDate()
-        val today = getTodayDate()
-        val timeSeries = repository.getTimeseries(yesterday, today, "UAH")
-        Log.i("TAG", "getHolderItems: $timeSeries")
-        val pastValue: Map<String, Double> = timeSeries.rates[yesterday]!!
-        val lastValue: Map<String, Double> = timeSeries.rates[today]!!
-
-        Log.i("TAG", "pastValue: $pastValue")
-        Log.i("TAG", "lastValue: $lastValue")
-
-        val change = lastValue.map { (key, value) ->
-            val newVal = ((pastValue.getValue(key) - lastValue.getValue(key)) / lastValue.getValue(key)) * 100
-            val dynamic = when{
-                newVal > 0 -> CurrenciesDynamic.UP
-                newVal < 0 -> CurrenciesDynamic.DOWN
-                newVal == 0.0 -> CurrenciesDynamic.EQUAL
-
-                else -> {throw IllegalArgumentException()}
-            }
-            HolderItem(key, newVal, dynamic)
-        }
-        Log.i("TAG", "change: $change")
-        return change
-    }
-
-    fun getTodayDate(): String{
-        val c: Date = Calendar.getInstance().time
-        val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return df.format(c)
-    }
-
-    fun getYesterdayDate(): String{
-        val c: Date = Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time
-        val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return df.format(c)
+        return getCurrenciesItem.getHolderItems(null).map { it.toHolderItem() }
     }
 }
+
+private fun CurrencyItem.toHolderItem() = HolderItem(
+    name = name,
+    change = change,
+    dynamic = dynamic
+)
+
+
 
 data class HolderItem(
     val name: String,
