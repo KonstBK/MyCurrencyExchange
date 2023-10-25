@@ -46,14 +46,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
-    }
 }
 
 dependencies {
-    val roomVersion = "2.3.0"
-    val lifecycleVersion = "2.4.0"
+    val roomVersion = "2.4.3"
     val appCompatVersion = "1.4.0"
     val activityVersion = "1.4.0"
 
@@ -62,9 +61,10 @@ dependencies {
     implementation ("androidx.activity:activity-ktx:$activityVersion")
 
     // Room components
-    implementation ("androidx.room:room-ktx:$roomVersion")
-    kapt ("androidx.room:room-compiler:$roomVersion")
+    implementation ("androidx.room:room-runtime:$roomVersion")
+    kapt ("androidx.room:room-compiler:2.3.0")
     androidTestImplementation ("androidx.room:room-testing:$roomVersion")
+    implementation ("androidx.room:room-ktx:$roomVersion")
 
 
     implementation ("androidx.appcompat:appcompat:1.6.1")
@@ -96,4 +96,4 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-}
+}}

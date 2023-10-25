@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
@@ -25,7 +26,7 @@ class CurrencyPairsFragment : Fragment() {
     private val viewModel by viewModels<CurrencyPairsViewModel>()
 
     companion object {
-        fun newInstance() = CurrencyPairsFragment()
+        //fun newInstance() = CurrencyPairsFragment()
     }
 
     override fun onCreateView(
@@ -37,21 +38,29 @@ class CurrencyPairsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewLifecycleOwner.lifecycleScope.launch { args.selectedCurrency?.let {
-            viewModel.getCurrencyPairsItem(
-                it
-            )
-            view.findViewById<Button>(R.id.search_pair_button).setOnClickListener {
-                val text = view.findViewById<TextView>(R.id.pair_edit_text).toString()
-                viewModel.searchByCurrencyName(text)
+        val pairsProgressBar = view.findViewById<View>(R.id.pairsProgressBar)
+        viewModel.pairsLoading.observe(viewLifecycleOwner) {isLoading ->
+            if (isLoading){
+                pairsProgressBar.visibility = View.VISIBLE
+            } else pairsProgressBar.visibility = View.GONE
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            args.selectedCurrency?.let {
+                viewModel.subscribeOn(it)
+                view.findViewById<Button>(R.id.search_pair_button).setOnClickListener {
+                    val text = view.findViewById<TextView>(R.id.pair_edit_text).text.toString()
+                    viewModel.searchByCurrencyName(text)
+                }
             }
-        } }
-        viewModel.pairs.observe(viewLifecycleOwner
+        }
+        viewModel.pairs.observe(
+            viewLifecycleOwner
         ) { value -> initRecycler(value) }
 
     }
 
-    private fun initRecycler(list: List<CurrencyPairsItem>){
+    private fun initRecycler(list: List<CurrencyPairsItem>) {
         val recycler = view?.findViewById<RecyclerView>(R.id.currencyPairsRecycler)
         recycler?.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
@@ -62,11 +71,20 @@ class CurrencyPairsFragment : Fragment() {
     }
 }
 
-class CurrencyPairsAdapter(private val context: Context, private val list: List<CurrencyPairsItem>):
+class CurrencyPairsAdapter(
+    private val context: Context,
+    private val list: List<CurrencyPairsItem>
+) :
     RecyclerView.Adapter<CurrencyPairsAdapter.CurrencyPairsHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CurrencyPairsHolder {
-        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.currency_pairs_item, parent, false)
+        val itemView = LayoutInflater
+            .from(parent.context)
+            .inflate(
+                R.layout.currency_pairs_item,
+                parent,
+                false
+            )
         return CurrencyPairsHolder(itemView)
     }
 
@@ -75,17 +93,22 @@ class CurrencyPairsAdapter(private val context: Context, private val list: List<
 
     override fun onBindViewHolder(holder: CurrencyPairsHolder, position: Int) {
         holder.currencyNameTextView.text = list[position].pairName
-        holder.currencyChangeTextView.text = list[position].pairChange.toString() + "%"
-        val drawable = when{
+        holder.currencyChangeTextView.text = context.resources.getString(R.string.currency_change,
+            "%.2f".format(list[position].pairChange.toString().toFloat()))
+
+        val drawable = when {
             list[position].pairChange > 0 -> R.drawable.baseline_keyboard_arrow_up_24
             list[position].pairChange < 0 -> R.drawable.baseline_keyboard_arrow_down_24
             list[position].pairChange == 0.0 -> R.drawable.baseline_circle_24
-            else -> {throw IllegalArgumentException()}
+            else -> {
+                throw IllegalArgumentException()
+            }
         }
-        holder.currencyDynamicImageView.setImageDrawable(context.getDrawable(drawable))
+
+        holder.currencyDynamicImageView.setImageDrawable(AppCompatResources.getDrawable(context, drawable))
     }
 
-    class CurrencyPairsHolder(itemView: View): RecyclerView.ViewHolder(itemView){
+    class CurrencyPairsHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val currencyNameTextView: TextView = itemView.findViewById(R.id.currencyPairName)
         val currencyChangeTextView: TextView = itemView.findViewById(R.id.currencyPairChange)
         val currencyDynamicImageView: ImageView = itemView.findViewById(R.id.currencyPairDynamic)
